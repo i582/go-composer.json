@@ -4,7 +4,7 @@ go-composer.json is a small library for manipulating the `composer.json` configu
 
 ### Install
 
-```go
+```
 go get github.com/i582/go-composer.json
 ```
 
