@@ -24,7 +24,8 @@ type Config struct {
 	Path string
 	// RootDir is a dir with config.
 	RootDir string
-
+	// Checks is a custom checks for config,
+	// see Config.AddCheck, Config.CheckConfig.
 	Checks []func(*Config) *ConfigError
 }
 
