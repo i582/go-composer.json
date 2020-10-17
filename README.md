@@ -2,6 +2,12 @@
 
 go-composer.json is a small library for manipulating the `composer.json` configuration file.
 
+### Install
+
+```go
+go get github.com/i582/go-composer.json
+```
+
 ### Supported
 
 1. Resolving of namespaces for PSR-4 autoload.
