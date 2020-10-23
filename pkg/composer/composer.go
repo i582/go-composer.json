@@ -1,5 +1,8 @@
 // Package composer contains functions and structures
 // for working with composer.json.
+//
+// Descriptions for config fields are taken from the official site
+// https://getcomposer.org/doc/04-schema.md (MIT License).
 package composer
 
 import (
@@ -7,12 +10,55 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+
+	"github.com/i582/go-composer.json/internal/version"
 )
 
 // Config is a structure that stores all the required fields
 // from composer.json.
 type Config struct {
-	Name        string            `json:"name"`
+	// The name of the package. It consists of vendor name and project name, separated by /.
+	//
+	// Examples:
+	//   monolog/monolog
+	//   igorw/event-source
+	//
+	// The name must be lowercased and consist of words separated by '-', '.' or '_'.
+	// The complete name should match ^[a-z0-9]([_.-]?[a-z0-9]+)*/[a-z0-9](([_.]?|-{0,2})[a-z0-9]+)*$.
+	//
+	// Name property is required for published packages (libraries).
+	Name string `json:"name"`
+
+	// A short description of the package. Usually this is one line long.
+	//
+	// Description property is required for published packages (libraries).
+	Description string `json:"description"`
+
+	// The version of the package.
+	// In most cases this is not required and should be omitted (see below).
+	//
+	// This must follow the format of X.Y.Z or vX.Y.Z with an optional suffix
+	// of -dev, -patch (-p), -alpha (-a), -beta (-b) or -RC.
+	// The patch, alpha, beta and RC suffixes can also be followed by a number.
+	//
+	// Examples:
+	//   1.0.0
+	//   1.0.2
+	//   1.1.0
+	//   0.2.5
+	//   1.0.0-dev
+	//   1.0.0-alpha3
+	//   1.0.0-beta2
+	//   1.0.0-RC5
+	//   v2.0.4-p1
+	//
+	// Optional if the package repository can infer the version from somewhere,
+	// such as the VCS tag name in the VCS repository. In that case it is also
+	// recommended to omit it.
+	RawVersion string `json:"version"`
+	// Parsed version.
+	Version *version.Version
+
 	Type        string            `json:"type"`
 	Require     map[string]string `json:"require"`
 	RequireDev  map[string]string `json:"require-dev"`
@@ -142,12 +188,27 @@ func NewConfigFromData(data []byte, configPath string) (*Config, *ConfigErrors) 
 			Critical: true,
 		})
 	}
+
+	var configErrors = &ConfigErrors{Config: &config}
+
+	config.Version, err = version.NewVersion(config.RawVersion)
+	if err != nil {
+		configErrors.Add(&ConfigError{
+			Msg:      err.Error(),
+			Critical: false,
+		})
+	}
+
 	absPath, _ := filepath.Abs(configPath)
 	root := filepath.Dir(absPath)
 
 	config.Path = absPath
-
 	config.RootDir = root
+
+	if configErrors.Len() != 0 {
+		return &config, configErrors
+	}
+
 	return &config, nil
 }
 
